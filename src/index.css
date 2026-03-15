@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@layer utilities {
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    body {
+      background: white !important;
+      padding: 0 !important;
+    }
+    .fixed {
+      position: relative !important;
+      background: white !important;
+    }
+    .bg-black\/50 {
+      background: none !important;
+    }
+    .shadow-2xl {
+      box-shadow: none !important;
+    }
+    .rounded-\[32px\] {
+      border-radius: 0 !important;
+    }
+  }
+}

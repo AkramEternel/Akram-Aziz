@@ -1,0 +1,119 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: articles
+// Fields:
+//   - id: string (required) - Sequential ID
+//   - name: string (required)
+//   - price: number (required) - Price in Algerian Dinar
+//   - imageUrl: string (optional)
+//
+// Collection: customers
+// Fields:
+//   - name: string (required)
+//   - address: string (optional)
+//   - zipCode: string (optional)
+//   - city: string (optional)
+//   - phone: string (optional)
+//   - email: string (optional)
+//
+// Collection: orders
+// Fields:
+//   - orderNumber: string (required) - Year + Sequential number
+//   - date: timestamp (required)
+//   - seller: string (optional)
+//   - status: string (required) - Neu, In Bearbeitung, Verpackt, Versendet, Bezahlt
+//   - customerId: string (required) - Reference to customer
+//   - articleIds: list (required) - List of article IDs
+//   - totalAmount: number (required)
+//   - shippedVia: string (optional)
+//   - paidAt: timestamp (optional)
+//   - paidVia: string (optional)
+//   - paidAmount: number (optional)
+//
+// Collection: settings
+// Fields:
+//   - lastArticleId: number
+//   - lastOrderNumber: number
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "akram.vienna@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Validation Functions
+    // ===============================================================
+    
+    function isValidArticle(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.price is number && data.price >= 0;
+    }
+
+    function isValidCustomer(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 200;
+    }
+
+    function isValidOrder(data) {
+      return data.orderNumber is string &&
+             data.status in ["Neu", "In Bearbeitung", "Verpackt", "Versendet", "Bezahlt"] &&
+             data.articleIds is list &&
+             data.totalAmount is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAdmin();
+    }
+
+    match /articles/{articleId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidArticle(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidCustomer(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidOrder(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+  }
+}

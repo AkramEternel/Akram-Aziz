@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "Article": {
+      "title": "Article",
+      "description": "Product available for order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Sequential ID" },
+        "name": { "type": "string" },
+        "price": { "type": "number", "description": "Price in Algerian Dinar" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["name", "price"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "zipCode": { "type": "string" },
+        "city": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "description": "Year + Sequential number" },
+        "date": { "type": "string", "format": "date-time" },
+        "seller": { "type": "string" },
+        "status": { 
+          "type": "string", 
+          "enum": ["Neu", "In Bearbeitung", "Verpackt", "Versendet", "Bezahlt"] 
+        },
+        "customerId": { "type": "string", "description": "Reference to customer" },
+        "articleIds": { "type": "array", "items": { "type": "string" } },
+        "totalAmount": { "type": "number" },
+        "shippedVia": { "type": "string" },
+        "paidAt": { "type": "string", "format": "date-time" },
+        "paidVia": { "type": "string" },
+        "paidAmount": { "type": "number" }
+      },
+      "required": ["orderNumber", "date", "customerId", "status"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "App settings like counters",
+      "type": "object",
+      "properties": {
+        "lastArticleId": { "type": "number" },
+        "lastOrderNumber": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "articles": { "schema": "Article", "description": "Collection of products" },
+    "customers": { "schema": "Customer", "description": "Collection of customers" },
+    "orders": { "schema": "Order", "description": "Collection of orders" },
+    "settings": { "schema": "Settings", "description": "App configuration" }
+  }
+}
